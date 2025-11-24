@@ -3,6 +3,10 @@ from adafruit_motor import servo
 import time
 import sys
 import math
+import digitalio
+import busio
+import usb_cdc
+
 
 def seconds_since_boot():
     return f"{time.monotonic():.3f}"
@@ -28,10 +32,20 @@ class HarveStar:
         self.shoulder.servo.angle = self.shoulder.start_angle
         self.elbow.servo.angle = self.elbow.start_angle
         self.end_effector.servo.angle = self.end_effector.start_angle
-        print(seconds_since_boot() + " - HarveStar initialized. Starting angles: Base: " + str(self.base.start_angle) + "°, Shoulder: " + str(self.shoulder.start_angle) + "°, Elbow: " + str(self.elbow.start_angle) + "°, End effector: " + str(self.end_effector.start_angle) + "°")
 
+    def check_constraints(self, shoulder_angle, elbow_angle, base_angle):
+        # Absolute bounds
+        if not (0 <= shoulder_angle <= 90):
+            print(f"⚠️ Shoulder angle out of bounds: {math.ceil(shoulder_angle)}° (must be 0–90°)")
+            return False
+        if not (0 <= elbow_angle <= 90):
+            print(f"⚠️ Elbow angle out of bounds: {math.ceil(elbow_angle)}° (must be 0–90°)")
+            return False
+        if not (0 <= base_angle <= 180):
+            print(f"⚠️ Base angle out of bounds: {math.ceil(base_angle)}° (must be 0–180°)")
+            return False
 
-    def check_constraints(self, shoulder_angle, elbow_angle):
+        # Constraint table checks
         constraints = [
             (0, 5, 55, 90),
             (5, 10, 40, 90),
@@ -55,15 +69,17 @@ class HarveStar:
 
         for s_low, s_high, e_low, e_high in constraints:
             if s_low <= shoulder_angle < s_high and not (e_low <= elbow_angle <= e_high):
-                raise Exception(f"Constraint violated: When shoulder is between {s_low} and {s_high} degrees, elbow must be between {e_low} and {e_high} degrees.\r\nCurrent angles are: Shoulder: {math.ceil(shoulder_angle)}°, Elbow: {math.ceil(elbow_angle)}°")
+                print(f"⚠️ Consasdtraint violated: Shoulder {math.ceil(shoulder_angle)}°, Elbow {math.ceil(elbow_angle)}° — valid elbow range for this shoulder: {e_low}-{e_high}°")
+                return False
 
+        # All checks passed
+        return True
     @staticmethod
     def compute_inverse_kinematics(x, y, z, L1 = 10, L2 = 13.225, L3 = 14.7):
         """Computes the joint angles θ1, θ2, θ3 given (x, y, z) position."""
 
         r = math.sqrt(x**2 + y**2)  # Horizontal distance
         d = math.sqrt(r**2 + (z - L1)**2)  # Distance from shoulder to target
-        
         if d > (L2 + L3):
             raise ValueError("ERROR: Target position is out of reach!")
 
@@ -105,11 +121,10 @@ class HarveStar:
         return x, y, z
 
 
-    def smooth_move(self, servo, target_angle, step=1, delay=0.01):
+    def smooth_move(self, servo, target_angle, delay, step = 1):
         current = servo.angle
         if current is None:
             current = target_angle
-
         if target_angle > current:
             step = abs(step)
         else:
@@ -148,30 +163,34 @@ class HarveStar:
         elbow_angle -= shoulder_angle  # GOONER AH LINE THIS SHIT TOOK 1 HOUR
 
         # Verify constraints before moving
-        print(f"DEBUG: shoulder_angle type: {type(shoulder_angle)}, value: {shoulder_angle}")
-        print(f"DEBUG: elbow_angle type: {type(elbow_angle)}, value: {elbow_angle}")
-        self.check_constraints(shoulder_angle, elbow_angle)
-        self.check_constraints(shoulder_angle, elbow_angle)
+        checked = self.check_constraints(shoulder_angle, elbow_angle, base_angle)
 
+        if(checked):
         # Constraints are satisfied, move the HarveStar
-        print(seconds_since_boot() + " - Moving HarveStar... Base: " + str(base_angle) + "°, Shoulder: " + str(shoulder_angle) + "°, Elbow: " + str(elbow_angle) + "°")
-        self.smooth_move(self.base.servo, base_angle)
-        self.smooth_move(self.shoulder.servo, shoulder_angle)
-        self.smooth_move(self.elbow.servo, elbow_angle)
+            print(seconds_since_boot() + " - Moving HarveStar... Base: " + str(base_angle) + "°, Shoulder: " + str(shoulder_angle) + "°, Elbow: " + str(elbow_angle) + "°")
+            self.smooth_move(self.base.servo, base_angle, 0.001)
+            self.smooth_move(self.shoulder.servo, shoulder_angle, 0.001)
+            self.smooth_move(self.elbow.servo, elbow_angle, 0.001)
+            return(True)
+        return False
+
+    def move_polar(self, r, phi_deg, z):
+        phi = math.radians(phi_deg)  # convert degrees to radians
+        x = r * math.cos(phi)
+        y = r * math.sin(phi)
+        worked = self.move_multiple(x, y, z)  # reuse your current Cartesian function
+        if worked:
+            return True
+        else:
+            return False
 
     def wait(self, seconds):
         print(seconds_since_boot() + " - Waiting for " + str(seconds) + " seconds...")
         time.sleep(seconds)
 
     def end_effector_move(self, end_effector_angle):
-        if(end_effector_angle >= 0 or end_effector_angle <= 90):
+        if(end_effector_angle >= 10 or end_effector_angle <= 85):
             print(seconds_since_boot() + " - Opening end effector to " + str(end_effector_angle) + " degrees")
             self.end_effector.servo.angle = end_effector_angle
         else:
-            raise Exception(f"Constraint violated: End Effector servo angle must be between 0 and 90. Angle attempted: {end_effector_angle}")
-        
-    def enter_controlled_mode(self):
-        print("Entering Controlled Mode")
-        exit = false
-        while(not exit):
-            # TODO: Addd code here lol
+            print(f"Constraint violated: End Effector servo angle must be between 0 and 90. Angle attempted: {end_effector_angle}")

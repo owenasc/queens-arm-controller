@@ -2,9 +2,8 @@ import serial
 import keyboard
 import sys
 import time
-
 SERIAL_PORT = 'COM6'
-BAUD_RATE = 115200
+BAUD_RATE = 9600
 
 print("=" * 50)
 print("HarveStar PC Keyboard Controller")
@@ -36,16 +35,10 @@ keys_pressed = set()
 
 def send_command(command):
     """Send a command to the Pico"""
+    command = command + "\n"
     try:
         ser.write(command.encode())
         print(f"Sent: {command}")
-        
-        # Read response from Pico
-        time.sleep(0.05)  # Small delay for Pico to respond
-        if ser.in_waiting > 0:
-            response = ser.readline().decode('utf-8', errors='ignore').strip()
-            if response:
-                print(f"Pico: {response}")
     except Exception as e:
         print(f"Error sending command: {e}")
 
@@ -105,7 +98,8 @@ try:
 
         command = ', '.join(str(key) for key in keys_pressed)
 
-        send_command(command)
+        if len(keys_pressed) > 0:
+            send_command(command)
         time.sleep(0.1)  # Small delay to prevent CPU overload
 
 except KeyboardInterrupt:
