@@ -8,7 +8,7 @@ def seconds_since_boot():
     return f"{time.monotonic():.3f}"
 
 class ServoMotor:
-    def __init__(self, pin, name, min_pulse=750, max_pulse=2250, actuation_range=180, start_angle=0):
+    def __init__(self, pin, name, min_pulse=750, max_pulse=1500, actuation_range=180, start_angle=0):
         self.pwm = pwmio.PWMOut(pin, duty_cycle=2 ** 15, frequency=50)
         self.servo = servo.Servo(self.pwm, min_pulse=min_pulse, max_pulse=max_pulse, actuation_range=actuation_range)
         self.name = name
@@ -105,9 +105,23 @@ class HarveStar:
         return x, y, z
 
 
+    def smooth_move(self, servo, target_angle, step=1, delay=0.01):
+        current = servo.angle
+        if current is None:
+            current = target_angle
 
+        if target_angle > current:
+            step = abs(step)
+        else:
+            step = -abs(step)
 
-    def move_multiple(self, x, y, z, end_effector_angle=None):
+        for angle in range(int(current), int(target_angle), step):
+            servo.angle = angle
+            time.sleep(delay)
+
+        servo.angle = target_angle  # final correction
+
+    def move_multiple(self, x, y, z):
         #CHANGE MOVE MULTIPLE ARGUMENTS TO BE X, Y, Z THEN CALL INVERSE KINEMATICS FUNCTION
 
         # Start of new stuff
@@ -134,25 +148,30 @@ class HarveStar:
         elbow_angle -= shoulder_angle  # GOONER AH LINE THIS SHIT TOOK 1 HOUR
 
         # Verify constraints before moving
+        print(f"DEBUG: shoulder_angle type: {type(shoulder_angle)}, value: {shoulder_angle}")
+        print(f"DEBUG: elbow_angle type: {type(elbow_angle)}, value: {elbow_angle}")
+        self.check_constraints(shoulder_angle, elbow_angle)
         self.check_constraints(shoulder_angle, elbow_angle)
 
         # Constraints are satisfied, move the HarveStar
         print(seconds_since_boot() + " - Moving HarveStar... Base: " + str(base_angle) + "°, Shoulder: " + str(shoulder_angle) + "°, Elbow: " + str(elbow_angle) + "°")
-        self.base.servo.angle = base_angle
-        self.shoulder.servo.angle = shoulder_angle
-        self.elbow.servo.angle = elbow_angle
-        if end_effector_angle is not None:
-            self.end_effector.servo.angle = end_effector_angle
-            print(seconds_since_boot() + " - End effector: " + str(end_effector_angle) + "°")
+        self.smooth_move(self.base.servo, base_angle)
+        self.smooth_move(self.shoulder.servo, shoulder_angle)
+        self.smooth_move(self.elbow.servo, elbow_angle)
 
     def wait(self, seconds):
         print(seconds_since_boot() + " - Waiting for " + str(seconds) + " seconds...")
         time.sleep(seconds)
 
-    def end_effector_open(self):
-        print(seconds_since_boot() + " - Opening end effector...")
-        self.end_effector.servo.angle = 90
-
-    def end_effector_close(self):
-        print(seconds_since_boot() + " - Closing end effector...")
-        self.end_effector.servo.angle = 0
+    def end_effector_move(self, end_effector_angle):
+        if(end_effector_angle >= 0 or end_effector_angle <= 90):
+            print(seconds_since_boot() + " - Opening end effector to " + str(end_effector_angle) + " degrees")
+            self.end_effector.servo.angle = end_effector_angle
+        else:
+            raise Exception(f"Constraint violated: End Effector servo angle must be between 0 and 90. Angle attempted: {end_effector_angle}")
+        
+    def enter_controlled_mode(self):
+        print("Entering Controlled Mode")
+        exit = false
+        while(not exit):
+            # TODO: Addd code here lol

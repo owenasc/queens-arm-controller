@@ -39,7 +39,7 @@ while True:
             led_pin.value = False
             # Enter test mode
             try:
-                harvestar.test()
+                harvestar.enter_controlled_mode()
             except Exception as e:
                 print(seconds_since_boot() + " - ERROR: " + str(e))
                 traceback.print_exception(e)
@@ -66,64 +66,12 @@ try:
     #get the raddish:
     harvestar.move_multiple(16.5, 20.5, 3.5)
     harvestar.wait(0.5)
+    harvestar.end_effector_move(20)
     harvestar.move_multiple(20, 24, 2.5)
     harvestar.wait(0.4)
-    harvestar.move_multiple(19, 23, 2.5, 20)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(17, 23, 6)
-    harvestar.wait(0.2)
+    harvestar.end_effector_move(90)
 
-    # Drop the raddish:
-    harvestar.move_multiple(25.5, -16, 8)
-    harvestar.wait(0.8)
-    harvestar.move_multiple(25.5, -16, 6)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(25.5, -16, 6, 90)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(25.5, -16, 10, 90)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(25.5, -8, 10, 90)
-    harvestar.wait(0.1)
-
-    #Get the carrot:
-    harvestar.move_multiple(16.5, 20.5, 3.5)
-    harvestar.wait(0.5)
-    harvestar.move_multiple(20, 24, 2.5)
-    harvestar.wait(0.4)
-    harvestar.move_multiple(19, 23, 2.5, 20)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(17, 23, 6)
-    harvestar.wait(0.2)
     
-    #Drop the carrot:
-    harvestar.move_multiple(28.5, -12.5, 8)
-    harvestar.wait(0.8)
-    harvestar.move_multiple(28, -12.5, 6)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(28, -12.5, 6, 90)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(28.5, -12.5, 12)
-    harvestar.wait(0.5)
-
-    #Get the tomatoe:
-    harvestar.move_multiple(16.5, 20.5, 6)
-    harvestar.wait(0.8)
-    harvestar.move_multiple(20.5, 25, 5.5)
-    harvestar.wait(0.4)
-    harvestar.move_multiple(20.5, 25, 5.5, 30)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(16, 21, 7)
-    harvestar.wait(0.2)
-
-    #Drop the tomatoe:
-    harvestar.move_multiple(30, -9, 7)
-    harvestar.wait(0.8)
-    harvestar.move_multiple(31.5, -9.5, 6)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(31.5, -9.5, 6, 90)
-    harvestar.wait(0.2)
-    harvestar.move_multiple(31.5, -9.5, 10, 90)
-    harvestar.wait(0.2)
 
 
 
