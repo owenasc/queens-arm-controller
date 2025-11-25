@@ -119,26 +119,31 @@ while True:
 # Example sequence
 print(seconds_since_boot() + " - Starting sequence...")
 try:
-    
-    #get the raddish:
-    harvestar.move_multiple(16.5, 20.5, 3.5)
-    harvestar.wait(0.5)
-    harvestar.end_effector_move(20)
-    harvestar.move_multiple(20, 24, 2.5)
-    harvestar.wait(0.4)
-    harvestar.end_effector_move(90)
 
     """
-    harvestar.move_multiple(25, 0, 15)
-    harvestar.wait(2)
-    harvestar.move_multiple(25, -5, 15)
-    harvestar.wait(1)
-    harvestar.move_multiple(25, 5, 15)
-    harvestar.wait(1)
-    harvestar.move_multiple(25, -5, 15)
-    harvestar.wait(1)
-    harvestar.move_multiple(25, 5, 15)
-    harvestar.wait(1)"""
+    Possible Function Options
+    harvestar.move_polar(radius_from_center, base_angle, vertical_height) -> (hand distance away from arm base in cm, arm rotation in degrees, hand height in cm)
+    harvestar.end_effector_move(end_effector_angle) -> (end effector angle in degrees from open (80 degrees) to closed (10 degrees))
+    harvestar.wait(seconds) -> (wait time in seconds)
+    """
+    
+    #Example starting sequence
+    harvestar.move_polar(20, 0, 5)   #move to a point
+    harvestar.end_effector_move(80)   #open end effector
+    harvestar.wait(1)                  #wait 1 second
+    harvestar.move_polar(20, 90, 1)
+    harvestar.wait(1)          #move down
+    harvestar.end_effector_move(10) 
+    harvestar.wait(1)         #close end effector
+    harvestar.move_polar(18, 0, 15) 
+    harvestar.wait(1)         #move up
+    harvestar.move_polar(15, 130, 10)   #move to drop off point
+    harvestar.wait(1)                  #wait 1 second
+    harvestar.end_effector_move(80)   #open end effector to drop off
+    harvestar.wait(1)                  #wait 1 second
+
+
+
 
 except Exception as e:
     print(seconds_since_boot() + " - ERROR: " + str(e))
