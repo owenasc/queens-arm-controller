@@ -41,9 +41,6 @@ class HarveStar:
         if not (0 <= elbow_angle <= 90):
             print(f"⚠️ Elbow angle out of bounds: {math.ceil(elbow_angle)}° (must be 0–90°)")
             return False
-        if not (0 <= base_angle <= 180):
-            print(f"⚠️ Base angle out of bounds: {math.ceil(base_angle)}° (must be 0–180°)")
-            return False
 
         # Constraint table checks
         constraints = [
@@ -136,27 +133,27 @@ class HarveStar:
 
         servo.angle = target_angle  # final correction
 
-    def move_multiple(self, x, y, z):
+    def move_multiple(self, x, y, z, delay):
         #CHANGE MOVE MULTIPLE ARGUMENTS TO BE X, Y, Z THEN CALL INVERSE KINEMATICS FUNCTION
 
         # Start of new stuff
-        print(f"Old y: {y}, Old x: {x}")
+        # print(f"Old y: {y}, Old x: {x}")
 
         base_angle = math.atan2(y, x) * (180 / math.pi)  # No need for absolute value
 
-        print(f"Base angle for trig: {base_angle}")
+        # print(f"Base angle for trig: {base_angle}")
 
 
         y -= 10.9 * math.sin(math.radians(base_angle))
         x -= 10.9 * math.cos(math.radians(base_angle))
         z += 1.8
 
-        print(f"New y: {y}, New x: {x}")
+        # print(f"New y: {y}, New x: {x}")
         # END OF NEW STUFF
 
         base_angle, shoulder_angle, elbow_angle = HarveStar.compute_inverse_kinematics(x, y, z)
 
-        base_angle = (base_angle* 1.50) + 90
+        base_angle = (base_angle* 1.50)
         # base_angle = (base_angle* 1.5) - 45
         
         shoulder_angle = 110 - shoulder_angle
@@ -167,10 +164,10 @@ class HarveStar:
 
         if(checked):
         # Constraints are satisfied, move the HarveStar
-            print(seconds_since_boot() + " - Moving HarveStar... Base: " + str(base_angle) + "°, Shoulder: " + str(shoulder_angle) + "°, Elbow: " + str(elbow_angle) + "°")
-            self.smooth_move(self.base.servo, base_angle, 0.001)
-            self.smooth_move(self.shoulder.servo, shoulder_angle, 0.001)
-            self.smooth_move(self.elbow.servo, elbow_angle, 0.001)
+            # print(seconds_since_boot() + " - Moving HarveStar... Base: " + str(base_angle) + "°, Shoulder: " + str(shoulder_angle) + "°, Elbow: " + str(elbow_angle) + "°")
+            self.smooth_move(self.base.servo, base_angle, delay)
+            self.smooth_move(self.shoulder.servo, shoulder_angle, delay)
+            self.smooth_move(self.elbow.servo, elbow_angle, delay)
             return(True)
         return False
 
@@ -178,8 +175,9 @@ class HarveStar:
         phi = math.radians(phi_deg)  # convert degrees to radians
         x = r * math.cos(phi)
         y = r * math.sin(phi)
-        worked = self.move_multiple(x, y, z)  # reuse your current Cartesian function
+        worked = self.move_multiple(x, y, z, 0.01)  # reuse your current Cartesian function
         if worked:
+            print(f"Moving arm to R: {r}, Base angle: {phi_deg}, Height {z}")
             return True
         else:
             return False
@@ -194,3 +192,4 @@ class HarveStar:
             self.end_effector.servo.angle = end_effector_angle
         else:
             print(f"Constraint violated: End Effector servo angle must be between 0 and 90. Angle attempted: {end_effector_angle}")
+    

@@ -44,7 +44,7 @@ while True:
             try:
                 print("Harvestar Entering Controlled Mode")
                 x, y, z = 18, 20, 5
-                harvestar.move_multiple(x, y, z)
+                harvestar.move_multiple(x, y, z, 0.001)
                 # Starting cylindrical coordinates
                 r = math.sqrt(x**2 + y**2)   # horizontal distance
                 phi = math.atan2(y, x)       # azimuth in radians
@@ -81,12 +81,12 @@ while True:
                         if new_r != r or new_phi != phi or new_z != z or new_ee != ee:
                             x = new_r * math.cos(new_phi)
                             y = new_r * math.sin(new_phi)
-                            if harvestar.move_multiple(x, y, new_z) == True:
+                            if harvestar.move_multiple(x, y, new_z, 0.001) == True:
                                 r, phi, z = new_r, new_phi, new_z
                             else:
                                 x = r * math.cos(phi)
                                 y = r * math.sin(phi)
-                                harvestar.move_multiple(x, y, z)
+                                harvestar.move_multiple(x, y, z, 0.001)
                             if(new_ee <= 85 and new_ee >= 15):
                                 harvestar.end_effector_move(new_ee)
                                 ee = new_ee
@@ -119,30 +119,39 @@ while True:
 # Example sequence
 print(seconds_since_boot() + " - Starting sequence...")
 try:
-
-    """
-    Possible Function Options
-    harvestar.move_polar(radius_from_center, base_angle, vertical_height) -> (hand distance away from arm base in cm, arm rotation in degrees, hand height in cm)
-    harvestar.end_effector_move(end_effector_angle) -> (end effector angle in degrees from open (80 degrees) to closed (10 degrees))
-    harvestar.wait(seconds) -> (wait time in seconds)
-    """
-    
-    #Example starting sequence
-    harvestar.move_polar(20, 0, 5)   #move to a point
+    #get the raddish:
+    harvestar.move_polar(25, 0, 15)   #move to a point
     harvestar.end_effector_move(80)   #open end effector
-    harvestar.wait(1)                  #wait 1 second
-    harvestar.move_polar(20, 90, 1)
-    harvestar.wait(1)          #move down
-    harvestar.end_effector_move(10) 
-    harvestar.wait(1)         #close end effector
-    harvestar.move_polar(18, 0, 15) 
-    harvestar.wait(1)         #move up
-    harvestar.move_polar(15, 130, 10)   #move to drop off point
-    harvestar.wait(1)                  #wait 1 second
+    harvestar.wait(2)                  #wait 1 second
+    harvestar.move_polar(30, 0, 8)
+    harvestar.wait(2)          #move down
+    harvestar.end_effector_move(15) 
+    harvestar.wait(2)         #close end effector
+    harvestar.move_polar(30, 0, 25) 
+    harvestar.wait(2)         #move up
+    harvestar.move_polar(30, 120, 20)   #move to drop aaaaaaaaaaaaaaaaaaswaoff point
+    harvestar.wait(2)                  #wait 1 second
     harvestar.end_effector_move(80)   #open end effector to drop off
     harvestar.wait(1)                  #wait 1 second
 
+    
 
+
+
+
+    """
+    harvestar.move_multiple(25, 0, 15)
+    harvestar.wait(2)
+    harvestar.move_multiple(25, -5, 15)
+    harvestar.wait(1)
+    harvestar.move_multiple(25, 5, 15)
+    harvestar.wait(1)
+    harvestar.move_multiple(25, -5, 15)
+    harvestar.wait(1)
+    harvestar.move_multiple(25, 5, 15)
+    harvestar.wait(1)"""
+
+    
 
 
 except Exception as e:

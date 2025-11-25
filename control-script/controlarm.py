@@ -2,7 +2,7 @@ import serial
 import keyboard
 import sys
 import time
-SERIAL_PORT = 'COM6'
+SERIAL_PORT = 'COM9'
 BAUD_RATE = 9600
 
 print("=" * 50)
